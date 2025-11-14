@@ -75,6 +75,17 @@ Everything is optimized for keyboard/HID scanners: the input stays focused and p
    This launches `backend` (Gunicorn) and `frontend` (nginx serving the built SPA) containers. nginx proxies `/api/` to the
    backend, mirroring the `import.inventree.itrocas.com` deployment model.
 
+   Both the Django API and the nginx front-end ports are configurable so they do not clash with other services on your host.
+   Override them in `.env` before running compose:
+
+   ```bash
+   BACKEND_HOST_PORT=8000
+   FRONTEND_HOST_PORT=6000
+   NGINX_PORT=6000
+   ```
+
+   With the example above, nginx listens on `:6000` inside the container and Docker publishes it at the same port on the host.
+
 ## Required environment variables
 
 | Variable | Description |

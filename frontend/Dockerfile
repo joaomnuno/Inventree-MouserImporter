@@ -6,6 +6,11 @@ COPY frontend/ ./
 RUN npm run build
 
 FROM nginx:1.25-alpine
-COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
+RUN apk add --no-cache gettext
+ENV NGINX_PORT=80
+COPY deploy/nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY deploy/docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 80
+ENTRYPOINT ["/docker-entrypoint.sh"]
