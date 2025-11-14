@@ -5,12 +5,10 @@ RUN npm install
 COPY frontend/ ./
 RUN npm run build
 
-FROM nginx:1.25-alpine
-RUN apk add --no-cache gettext
-ENV NGINX_PORT=80
-COPY deploy/nginx.conf.template /etc/nginx/templates/default.conf.template
-COPY deploy/docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
-COPY --from=build /app/dist /usr/share/nginx/html
-EXPOSE 80
-ENTRYPOINT ["/docker-entrypoint.sh"]
+FROM node:20-alpine AS runtime
+WORKDIR /srv/app
+RUN npm install -g serve
+COPY --from=build /app/dist ./
+ENV FRONTEND_PORT=4173
+EXPOSE 4173
+CMD ["sh", "-c", "serve -s /srv/app -l ${FRONTEND_PORT:-4173}"]

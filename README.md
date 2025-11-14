@@ -10,7 +10,6 @@ frontend focuses on a single streamlined import screen.
 .
 ├── backend/        # Django project exposing /api/search/* and /api/import endpoints
 ├── frontend/       # React + Vite single-page app with barcode scanner UI
-├── deploy/         # nginx reverse proxy used by the production image
 ├── docker-compose.yml
 └── .env.example
 ```
@@ -72,19 +71,21 @@ Everything is optimized for keyboard/HID scanners: the input stays focused and p
    docker compose up --build
    ```
 
-   This launches `backend` (Gunicorn) and `frontend` (nginx serving the built SPA) containers. nginx proxies `/api/` to the
-   backend, mirroring the `import.inventree.itrocas.com` deployment model.
+   This launches `backend` (Gunicorn) and `frontend` (Node + `serve` hosting the built SPA) containers. The SPA now only serves
+   static assets; your existing nginx reverse proxy manager should handle routing `/` to the frontend container and `/api/`
+   to `backend:8000`.
 
-   Both the Django API and the nginx front-end ports are configurable so they do not clash with other services on your host.
-   Override them in `.env` before running compose:
+   Both the Django API and the frontend ports are configurable so they do not clash with other services on your host. Override
+   them in `.env` before running compose:
 
    ```bash
    BACKEND_HOST_PORT=8000
    FRONTEND_HOST_PORT=6000
-   NGINX_PORT=6000
+   FRONTEND_PORT=4173
    ```
 
-   With the example above, nginx listens on `:6000` inside the container and Docker publishes it at the same port on the host.
+   With the example above, the frontend serves on `:4173` inside the container and Docker publishes it at port `6000` on the
+   host.
 
 ## Required environment variables
 
