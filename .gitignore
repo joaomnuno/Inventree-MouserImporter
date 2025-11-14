@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.tsbuildinfo
+.env
+.env.local
+.DS_Store
+**/node_modules/
+frontend/dist/
+*.sqlite3
+coverage/
