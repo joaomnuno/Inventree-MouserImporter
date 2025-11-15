@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import BarcodeScanner from "./components/BarcodeScanner";
 
 type Supplier = "mouser" | "digikey";
@@ -39,6 +39,22 @@ const defaultPart: PartResponse = {
   price_breaks: []
 };
 
+const getCookie = (name: string) => {
+  if (typeof document === "undefined") {
+    return null;
+  }
+  const cookies = document.cookie ? document.cookie.split(";") : [];
+  for (const cookie of cookies) {
+    const trimmed = cookie.trim();
+    if (trimmed.startsWith(`${name}=`)) {
+      return decodeURIComponent(trimmed.substring(name.length + 1));
+    }
+  }
+  return null;
+};
+
+const getCsrfToken = () => getCookie("csrftoken");
+
 function App() {
   const [supplier, setSupplier] = useState<Supplier>("mouser");
   const [input, setInput] = useState("");
@@ -47,6 +63,12 @@ function App() {
   const [message, setMessage] = useState<string | null>(null);
   const [scannerActive, setScannerActive] = useState(false);
 
+  useEffect(() => {
+    fetch("/api/health/", { credentials: "include" }).catch(() => {
+      /* Ignore health check errors, they will surface on real requests */
+    });
+  }, []);
+
   const fetchPart = useCallback(async (value: string) => {
     if (!value) {
       return;
@@ -54,13 +76,27 @@ function App() {
     setLoading(true);
     setMessage(null);
     try {
+      const csrfToken = getCsrfToken();
       const response = await fetch(`/api/search/${supplier}/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          ...(csrfToken ? { "X-CSRFToken": csrfToken } : {})
+        },
         body: JSON.stringify({ part_number: value })
       });
       if (!response.ok) {
-        throw new Error("Unable to fetch part information");
+        let errorMessage = "Unable to fetch part information";
+        try {
+          const detail = await response.json();
+          if (detail?.detail) {
+            errorMessage = detail.detail;
+          }
+        } catch (error) {
+          /* ignore json errors */
+        }
+        throw new Error(errorMessage);
       }
       const data: PartResponse = await response.json();
       setPart({ ...defaultPart, ...data });
@@ -78,9 +114,14 @@ function App() {
     setLoading(true);
     setMessage(null);
     try {
+      const csrfToken = getCsrfToken();
       const response = await fetch("/api/import/", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          ...(csrfToken ? { "X-CSRFToken": csrfToken } : {})
+        },
         body: JSON.stringify(part)
       });
       if (!response.ok) {

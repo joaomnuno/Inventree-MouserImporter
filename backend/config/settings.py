@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import os
+import copy
 from pathlib import Path
+
+from django.utils.log import DEFAULT_LOGGING
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -22,8 +25,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -66,7 +70,14 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
+
+# Para desenvolvimento (ficheiros estáticos dentro da app)
+STATICFILES_DIRS = [BASE_DIR / "static"]
+
+# Para produção (onde o collectstatic vai colocar tudo)
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
@@ -77,3 +88,14 @@ REST_FRAMEWORK = {
 CORS_ALLOW_ALL_ORIGINS = os.environ.get("CORS_ALLOW_ALL", "true").lower() == "true"
 DEFAULT_COUNTRY = os.environ.get("DEFAULT_COUNTRY", "PT")
 DEFAULT_CURRENCY = os.environ.get("DEFAULT_CURRENCY", "EUR")
+CSRF_TRUSTED_ORIGINS = [
+    "https://import.inventree.itrocas.com",
+    "http://import.inventree.itrocas.com",
+]
+
+LOGGING = copy.deepcopy(DEFAULT_LOGGING)
+LOGGING.setdefault("loggers", {})
+LOGGING["loggers"]["api.services.mouser"] = {
+    "handlers": ["console"],
+    "level": "INFO",
+}

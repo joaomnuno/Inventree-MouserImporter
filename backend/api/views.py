@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import logging
+
 from django.conf import settings
 from django.http import JsonResponse
+from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,7 +16,10 @@ from .serializers import (
 )
 from .services import digikey, inventree, mouser
 
+logger = logging.getLogger(__name__)
 
+
+@ensure_csrf_cookie
 def health_check(_request):
     return JsonResponse(
         {
@@ -28,7 +34,11 @@ class MouserSearchView(APIView):
     def post(self, request):
         serializer = PartNumberSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        part = mouser.search_part(serializer.validated_data["part_number"])
+        try:
+            part = mouser.search_part(serializer.validated_data["part_number"])
+        except ValueError as exc:
+            logger.warning("Mouser search failed for %s: %s", serializer.validated_data["part_number"], exc)
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         response = PartResponseSerializer(part)
         return Response(response.data)
 
@@ -37,7 +47,11 @@ class DigiKeySearchView(APIView):
     def post(self, request):
         serializer = PartNumberSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        part = digikey.search_part(serializer.validated_data["part_number"])
+        try:
+            part = digikey.search_part(serializer.validated_data["part_number"])
+        except ValueError as exc:
+            logger.warning("Digi-Key search failed for %s: %s", serializer.validated_data["part_number"], exc)
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         response = PartResponseSerializer(part)
         return Response(response.data)
 
