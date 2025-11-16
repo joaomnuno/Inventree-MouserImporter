@@ -103,6 +103,9 @@ CSRF_TRUSTED_ORIGINS = [
     "http://import.inventree.itrocas.com",
 ]
 
+INVENTREE_BASE_URL = os.environ.get("INVENTREE_BASE_URL")
+INVENTREE_TOKEN = os.environ.get("INVENTREE_TOKEN")
+
 LOGGING = copy.deepcopy(DEFAULT_LOGGING)
 LOGGING.setdefault("loggers", {})
 LOGGING["loggers"]["api.services.mouser"] = {
