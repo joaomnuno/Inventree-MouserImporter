@@ -9,7 +9,7 @@
 ## Build, Test, and Development Commands
 - `docker compose up --build` — rebuilds both services and runs the stack locally.
 - `cd backend && poetry run python manage.py test` (or `pytest`) — executes Django unit tests.
-- `cd backend && python manage.py collectstatic --noinput` — rebuilds admin/DRF static assets (required after dependency updates and before Docker builds).
+- `cd backend && python manage.py collectstatic --noinput` — rebuilds admin/DRF static assets whenever dependencies change and before Docker builds.
 - `cd frontend && npm install && npm run dev` — starts the Vite dev server; `npm run test` runs frontend unit tests.
 - `cd inventree-part-import && poetry run pytest` — validates the vendored importer logic before syncing changes.
 

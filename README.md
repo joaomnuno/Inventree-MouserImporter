@@ -111,18 +111,18 @@ Everything is optimized for keyboard/HID scanners: the input stays focused and p
 | --- | --- |
 | `DJANGO_SECRET_KEY` | Secret used by Django (generate a long random string) |
 | `MOUSER_API_KEY` | Mouser Search API key |
+| `MOUSER_SCRAPING` | Set to `true` to enable Mouser spec scraping for richer data (default `true`) |
+| `MOUSER_CURRENCY` / `MOUSER_LOCALE` | Overrides for Mouser currency + product domain |
 | `DIGIKEY_CLIENT_ID` / `DIGIKEY_CLIENT_SECRET` | OAuth credentials for Digi-Key Product Information API v4 |
+| `DIGIKEY_LANGUAGE` / `DIGIKEY_LOCATION` / `DIGIKEY_CURRENCY` | Locale overrides sent to the Digi-Key API |
 | `INVENTREE_BASE_URL` | Base URL for your InvenTree instance (e.g. `https://inventree.itrocas.com`) |
 | `INVENTREE_TOKEN` | API token for the import bot user |
 | `INVENTREE_MOUSER_COMPANY_ID` / `INVENTREE_DIGIKEY_COMPANY_ID` | Company IDs in InvenTree used when creating supplier parts |
 | `DEFAULT_COUNTRY` / `DEFAULT_CURRENCY` | Locale hints used when normalizing price data (defaults: `PT` and `EUR`) |
 | `DEFAULT_LANGUAGE` | Two-letter locale passed to importer suppliers (default `EN`) |
-| `IMPORTER_CONFIG_DIR` | Where runtime configs (`config.yaml`, `suppliers.yaml`, etc.) are written (default `.importer_config/`) |
-| `IMPORTER_CONFIG_TEMPLATE_DIR` | Directory containing the baseline configs that get copied into the runtime dir |
 | `IMPORTER_SUPPLIERS` | Comma-separated supplier ids to enable (`mouser,digikey` by default) |
+| `IMPORTER_CONFIG_DIR` / `IMPORTER_CONFIG_TEMPLATE_DIR` | Paths for runtime importer configs and templates |
 | `IMPORTER_REQUEST_TIMEOUT` | Timeout (seconds) for importer calls to InvenTree (default `30`) |
-| `MOUSER_SCRAPING` / `MOUSER_CURRENCY` / `MOUSER_LOCALE` | Optional overrides for the Mouser importer config |
-| `DIGIKEY_LANGUAGE` / `DIGIKEY_LOCATION` / `DIGIKEY_CURRENCY` | Optional overrides for the Digi-Key importer config |
 
 ## Notes & future enhancements
 
