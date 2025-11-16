@@ -107,12 +107,20 @@ LOGGING["loggers"]["api.services.mouser"] = {
     "level": "INFO",
 }
 
-IMPORTER_CONFIG_TEMPLATE_DIR = Path(
-    os.environ.get("IMPORTER_CONFIG_TEMPLATE_DIR", REPO_ROOT / "inventree_part_import_config")
-).resolve()
-IMPORTER_CONFIG_DIR = Path(
-    os.environ.get("IMPORTER_CONFIG_DIR", REPO_ROOT / ".importer_config")
-).resolve()
+def _resolve_path(env_value: str | None, default: Path) -> Path:
+    if env_value:
+        candidate = Path(env_value)
+        if not candidate.is_absolute():
+            candidate = REPO_ROOT / candidate
+        return candidate.resolve()
+    return default.resolve()
+
+IMPORTER_CONFIG_TEMPLATE_DIR = _resolve_path(
+    os.environ.get("IMPORTER_CONFIG_TEMPLATE_DIR"), REPO_ROOT / "inventree_part_import_config"
+)
+IMPORTER_CONFIG_DIR = _resolve_path(
+    os.environ.get("IMPORTER_CONFIG_DIR"), REPO_ROOT / ".importer_config"
+)
 IMPORTER_REQUEST_TIMEOUT = float(os.environ.get("IMPORTER_REQUEST_TIMEOUT", 30))
 IMPORTER_SUPPLIERS = [
     supplier.strip()
