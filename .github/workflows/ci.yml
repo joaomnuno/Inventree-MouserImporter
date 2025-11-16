@@ -24,6 +24,10 @@ jobs:
           pip install -r backend/requirements.txt
           pip install -e inventree-part-import
 
+      - name: Collect static assets
+        working-directory: backend
+        run: python manage.py collectstatic --noinput
+
       - name: Run Django tests
         working-directory: backend
         run: python manage.py test

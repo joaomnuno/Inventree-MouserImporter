@@ -65,11 +65,12 @@ Everything is optimized for keyboard/HID scanners: the input stays focused and p
    # edit .env with Mouser API key, Digi-Key client credentials, and the InvenTree token
    ```
 
-2. Install backend dependencies and run the Django checks:
+2. Install backend dependencies, run migrations, and build static assets:
 
    ```bash
    pip install -r backend/requirements.txt
    python backend/manage.py migrate  # creates the local sqlite DB used for admin/auth
+   python backend/manage.py collectstatic --noinput  # generates admin / DRF bundles under backend/staticfiles/
    python backend/manage.py runserver
    ```
 
@@ -131,3 +132,5 @@ Everything is optimized for keyboard/HID scanners: the input stays focused and p
   misconfiguration in container logs.
 - Batch import, richer parameter templating, and attachment uploads will be layered on after the happy-path experience is
   polished.
+- `backend/staticfiles/` is a build artifact created by `python backend/manage.py collectstatic --noinput`. Run it whenever you
+  upgrade Django/DRF assets so the Docker image and CI builds stay in sync.

@@ -14,6 +14,8 @@ COPY inventree_part_import_config ./inventree_part_import_config
 RUN pip install --no-cache-dir -e ./inventree-part-import
 
 WORKDIR /app/backend
+ENV DJANGO_SETTINGS_MODULE=config.settings
+RUN python manage.py collectstatic --noinput
 RUN chmod +x entrypoint.sh
 
 EXPOSE 8000
