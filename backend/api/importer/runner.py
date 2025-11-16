@@ -39,6 +39,7 @@ class ImporterRunner:
         self.configuration = configuration or ImporterConfiguration()
         self._category_map = None
         self._parameter_map = None
+        self._suppliers_ready = False
 
     # -----------------
     # Public interface
@@ -77,7 +78,9 @@ class ImporterRunner:
         except ImporterConfigurationError as exc:
             raise ImporterError(str(exc)) from exc
 
-        get_suppliers(reload=reload_suppliers)
+        force_reload = reload_suppliers or not self._suppliers_ready
+        get_suppliers(reload=force_reload)
+        self._suppliers_ready = True
         setup_supplier_companies(inventree_api)
 
         if self._category_map is None or reload_suppliers:
