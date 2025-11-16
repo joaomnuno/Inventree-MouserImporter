@@ -1,0 +1,7 @@
+.history/
+
+*.pyc
+
+Cache/
+inventree.yaml
+suppliers.yaml
