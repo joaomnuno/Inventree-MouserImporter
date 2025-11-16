@@ -3,11 +3,16 @@ from __future__ import annotations
 import os
 import copy
 from pathlib import Path
+import sys
 
 from django.utils.log import DEFAULT_LOGGING
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-REPO_ROOT = BASE_DIR.parent
+REPO_ROOT = Path(os.environ.get("REPO_ROOT", BASE_DIR.parent))
+
+VENDOR_DIR = REPO_ROOT / "inventree-part-import"
+if VENDOR_DIR.exists():
+    sys.path.insert(0, str(VENDOR_DIR))
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "changeme")
 DEBUG = os.environ.get("DEBUG", "false").lower() == "true"

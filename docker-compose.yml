@@ -6,7 +6,8 @@ services:
     env_file:
       - .env
     volumes:
-      - ./backend:/app
+      - ./:/workspace
+    working_dir: /workspace/backend
     ports:
       - "${BACKEND_HOST_PORT:-8000}:8000"
 

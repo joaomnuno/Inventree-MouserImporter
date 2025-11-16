@@ -5,10 +5,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-COPY backend/requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+COPY backend/requirements.txt backend/requirements.txt
+RUN pip install --no-cache-dir -r backend/requirements.txt
 
-COPY backend/ ./
+COPY backend ./backend
+COPY inventree-part-import ./inventree-part-import
+COPY inventree_part_import_config ./inventree_part_import_config
+RUN pip install --no-cache-dir -e ./inventree-part-import
+
+WORKDIR /app/backend
 RUN chmod +x entrypoint.sh
 
 EXPOSE 8000
