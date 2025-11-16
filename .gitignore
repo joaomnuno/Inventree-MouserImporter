@@ -8,3 +8,5 @@ __pycache__/
 frontend/dist/
 *.sqlite3
 coverage/
+.importer_config/
+.venv/
