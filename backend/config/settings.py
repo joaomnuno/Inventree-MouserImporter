@@ -6,9 +6,12 @@ from pathlib import Path
 import sys
 
 from django.utils.log import DEFAULT_LOGGING
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-REPO_ROOT = Path(os.environ.get("REPO_ROOT", BASE_DIR.parent))
+repo_root_default = BASE_DIR.parent
+load_dotenv(repo_root_default / ".env")
+REPO_ROOT = Path(os.environ.get("REPO_ROOT", repo_root_default))
 
 VENDOR_DIR = REPO_ROOT / "inventree-part-import"
 if VENDOR_DIR.exists():
