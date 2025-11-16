@@ -84,10 +84,42 @@ button.secondary {
   margin-bottom: 1rem;
 }
 
+.alert.warning {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.alert p {
+  margin: 0;
+}
+
+.alert p + p {
+  margin-top: 0.4rem;
+}
+
+.info-banner {
+  background-color: #eef2ff;
+  color: #312e81;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1rem;
+}
+
+.form-grid label small {
+  display: block;
+  margin-top: 0.25rem;
+  color: #64748b;
+  font-size: 0.75rem;
 }
 
 .metadata {

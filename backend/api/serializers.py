@@ -27,6 +27,7 @@ class PartResponseSerializer(serializers.Serializer):
     category_path = serializers.ListField(child=serializers.CharField(), required=False)
     datasheet_url = serializers.CharField(allow_blank=True, required=False)
     image_url = serializers.CharField(allow_blank=True, required=False)
+    supplier_link = serializers.CharField(allow_blank=True, required=False)
     stock = serializers.IntegerField(required=False)
     lead_time_weeks = serializers.IntegerField(required=False)
     price_breaks = PriceBreakSerializer(many=True, required=False)
@@ -35,6 +36,30 @@ class PartResponseSerializer(serializers.Serializer):
 
 class PartNumberSerializer(serializers.Serializer):
     part_number = serializers.CharField()
+
+
+class ImporterLookupSerializer(serializers.Serializer):
+    supplier = serializers.CharField()
+    part_number = serializers.CharField()
+
+
+class ImporterOverridesSerializer(serializers.Serializer):
+    name = serializers.CharField(required=False, allow_blank=True)
+    description = serializers.CharField(required=False, allow_blank=True)
+    manufacturer = serializers.CharField(required=False, allow_blank=True)
+    mpn = serializers.CharField(required=False, allow_blank=True)
+    supplier_sku = serializers.CharField(required=False, allow_blank=True)
+    category_path = serializers.ListField(
+        child=serializers.CharField(), required=False, allow_empty=True
+    )
+    datasheet_url = serializers.CharField(required=False, allow_blank=True)
+    image_url = serializers.CharField(required=False, allow_blank=True)
+    parameters = ParameterSerializer(many=True, required=False)
+    price_breaks = PriceBreakSerializer(many=True, required=False)
+
+
+class ImporterCommitSerializer(ImporterLookupSerializer):
+    overrides = ImporterOverridesSerializer(required=False)
 
 
 class ImportRequestSerializer(PartResponseSerializer):

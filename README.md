@@ -21,6 +21,23 @@ frontend focuses on a single streamlined import screen.
   API.
 - Environment-driven configuration keeps secrets outside of the repo and mirrors the deployment in the existing Docker host.
 
+### Vendored importer endpoints
+
+The Django app now bootstraps [`inventree-part-import`](inventree-part-import/) with the sample configs under
+`inventree_part_import_config/`. Two new endpoints expose its functionality:
+
+| Endpoint | Description |
+| --- | --- |
+| `POST /api/importer/preview/` | Runs the importer in dry-run mode (using the vendored configs) and returns the normalized part details plus the matched InvenTree category suggestion. |
+| `POST /api/importer/import/` | Replays the importer with the real InvenTree API token and creates/updates the part. Optional overrides from the UI (description, parameters, price breaks, etc.) are applied before the importer runs. |
+
+On first use the backend copies `inventree_part_import_config/*` into `.importer_config/` (gitignored) and injects secrets from
+environment variables into `suppliers.yaml`. You can override the runtime directory with `IMPORTER_CONFIG_DIR` or point to a
+different template folder via `IMPORTER_CONFIG_TEMPLATE_DIR`.
+
+The SPA now calls `preview` first, lets the user tweak the payload, and then calls `import`. If the importer cannot match a
+category or supplier it returns a helpful warning so you can update `categories.yaml` / `suppliers.yaml` accordingly.
+
 Key modules live under `backend/api/services/`:
 
 | File | Purpose |
@@ -98,6 +115,13 @@ Everything is optimized for keyboard/HID scanners: the input stays focused and p
 | `INVENTREE_TOKEN` | API token for the import bot user |
 | `INVENTREE_MOUSER_COMPANY_ID` / `INVENTREE_DIGIKEY_COMPANY_ID` | Company IDs in InvenTree used when creating supplier parts |
 | `DEFAULT_COUNTRY` / `DEFAULT_CURRENCY` | Locale hints used when normalizing price data (defaults: `PT` and `EUR`) |
+| `DEFAULT_LANGUAGE` | Two-letter locale passed to importer suppliers (default `EN`) |
+| `IMPORTER_CONFIG_DIR` | Where runtime configs (`config.yaml`, `suppliers.yaml`, etc.) are written (default `.importer_config/`) |
+| `IMPORTER_CONFIG_TEMPLATE_DIR` | Directory containing the baseline configs that get copied into the runtime dir |
+| `IMPORTER_SUPPLIERS` | Comma-separated supplier ids to enable (`mouser,digikey` by default) |
+| `IMPORTER_REQUEST_TIMEOUT` | Timeout (seconds) for importer calls to InvenTree (default `30`) |
+| `MOUSER_SCRAPING` / `MOUSER_CURRENCY` / `MOUSER_LOCALE` | Optional overrides for the Mouser importer config |
+| `DIGIKEY_LANGUAGE` / `DIGIKEY_LOCATION` / `DIGIKEY_CURRENCY` | Optional overrides for the Digi-Key importer config |
 
 ## Notes & future enhancements
 

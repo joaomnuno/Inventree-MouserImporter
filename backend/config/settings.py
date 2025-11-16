@@ -7,6 +7,7 @@ from pathlib import Path
 from django.utils.log import DEFAULT_LOGGING
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+REPO_ROOT = BASE_DIR.parent
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "changeme")
 DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
@@ -88,6 +89,7 @@ REST_FRAMEWORK = {
 CORS_ALLOW_ALL_ORIGINS = os.environ.get("CORS_ALLOW_ALL", "true").lower() == "true"
 DEFAULT_COUNTRY = os.environ.get("DEFAULT_COUNTRY", "PT")
 DEFAULT_CURRENCY = os.environ.get("DEFAULT_CURRENCY", "EUR")
+DEFAULT_LANGUAGE = os.environ.get("DEFAULT_LANGUAGE", "EN")
 CSRF_TRUSTED_ORIGINS = [
     "https://import.inventree.itrocas.com",
     "http://import.inventree.itrocas.com",
@@ -99,3 +101,16 @@ LOGGING["loggers"]["api.services.mouser"] = {
     "handlers": ["console"],
     "level": "INFO",
 }
+
+IMPORTER_CONFIG_TEMPLATE_DIR = Path(
+    os.environ.get("IMPORTER_CONFIG_TEMPLATE_DIR", REPO_ROOT / "inventree_part_import_config")
+).resolve()
+IMPORTER_CONFIG_DIR = Path(
+    os.environ.get("IMPORTER_CONFIG_DIR", REPO_ROOT / ".importer_config")
+).resolve()
+IMPORTER_REQUEST_TIMEOUT = float(os.environ.get("IMPORTER_REQUEST_TIMEOUT", 30))
+IMPORTER_SUPPLIERS = [
+    supplier.strip()
+    for supplier in os.environ.get("IMPORTER_SUPPLIERS", "mouser,digikey").split(",")
+    if supplier.strip()
+]

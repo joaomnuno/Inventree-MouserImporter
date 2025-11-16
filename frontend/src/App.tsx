@@ -26,6 +26,7 @@ type PartResponse = {
   category_path?: string[];
   datasheet_url?: string;
   image_url?: string;
+  supplier_link?: string;
   stock?: number;
   lead_time_weeks?: number;
   parameters?: Parameter[];
@@ -36,7 +37,24 @@ const defaultPart: PartResponse = {
   name: "",
   supplier: "",
   parameters: [],
-  price_breaks: []
+  price_breaks: [],
+  category_path: [],
+  supplier_link: ""
+};
+
+type ImporterPreview = {
+  supplier: Supplier;
+  supplier_name: string;
+  part_number: string;
+  match_count: number;
+  part: PartResponse;
+  matched_category?: string[] | null;
+  warnings?: string[];
+};
+
+type LookupContext = {
+  supplier: Supplier;
+  partNumber: string;
 };
 
 const getCookie = (name: string) => {
@@ -61,7 +79,22 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [part, setPart] = useState<PartResponse | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [previewWarnings, setPreviewWarnings] = useState<string[]>([]);
+  const [matchedCategory, setMatchedCategory] = useState<string[] | null>(null);
+  const [lastLookup, setLastLookup] = useState<LookupContext | null>(null);
   const [scannerActive, setScannerActive] = useState(false);
+
+  const resetPreview = useCallback(() => {
+    setPart(null);
+    setPreviewWarnings([]);
+    setMatchedCategory(null);
+    setLastLookup(null);
+  }, []);
+
+  const handleSupplierSwitch = (nextSupplier: Supplier) => {
+    setSupplier(nextSupplier);
+    resetPreview();
+  };
 
   useEffect(() => {
     fetch("/api/health/", { credentials: "include" }).catch(() => {
@@ -75,16 +108,18 @@ function App() {
     }
     setLoading(true);
     setMessage(null);
+    setPreviewWarnings([]);
+    setMatchedCategory(null);
     try {
       const csrfToken = getCsrfToken();
-      const response = await fetch(`/api/search/${supplier}/`, {
+      const response = await fetch(`/api/importer/preview/`, {
         method: "POST",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
           ...(csrfToken ? { "X-CSRFToken": csrfToken } : {})
         },
-        body: JSON.stringify({ part_number: value })
+        body: JSON.stringify({ supplier, part_number: value })
       });
       if (!response.ok) {
         let errorMessage = "Unable to fetch part information";
@@ -98,38 +133,65 @@ function App() {
         }
         throw new Error(errorMessage);
       }
-      const data: PartResponse = await response.json();
-      setPart({ ...defaultPart, ...data });
+      const data: ImporterPreview = await response.json();
+      setPart({ ...defaultPart, ...data.part });
+      setPreviewWarnings(data.warnings ?? []);
+      setMatchedCategory(data.matched_category ?? null);
+      setLastLookup({ supplier: data.supplier, partNumber: data.part_number });
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unexpected error");
+      setLastLookup(null);
     } finally {
       setLoading(false);
     }
   }, [supplier]);
 
   const handleImport = async () => {
-    if (!part) {
+    if (!part || !lastLookup) {
+      setMessage("Run a preview before importing.");
       return;
     }
     setLoading(true);
     setMessage(null);
     try {
       const csrfToken = getCsrfToken();
-      const response = await fetch("/api/import/", {
+      const overrides: Record<string, unknown> = {};
+      if (part.description) overrides.description = part.description;
+      if (part.manufacturer) overrides.manufacturer = part.manufacturer;
+      if (part.mpn) overrides.mpn = part.mpn;
+      if (part.supplier_sku) overrides.supplier_sku = part.supplier_sku;
+      if (part.datasheet_url) overrides.datasheet_url = part.datasheet_url;
+      if (part.image_url) overrides.image_url = part.image_url;
+      if (part.category_path && part.category_path.length > 0) {
+        overrides.category_path = part.category_path;
+      }
+      if (part.parameters && part.parameters.length > 0) {
+        overrides.parameters = part.parameters;
+      }
+      if (part.price_breaks && part.price_breaks.length > 0) {
+        overrides.price_breaks = part.price_breaks;
+      }
+
+      const response = await fetch("/api/importer/import/", {
         method: "POST",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
           ...(csrfToken ? { "X-CSRFToken": csrfToken } : {})
         },
-        body: JSON.stringify(part)
+        body: JSON.stringify({
+          supplier: lastLookup.supplier,
+          part_number: lastLookup.partNumber,
+          overrides
+        })
       });
       if (!response.ok) {
         const detail = await response.json();
         throw new Error(detail.detail || "Failed to import part");
       }
-      setMessage("Part created in InvenTree");
-      setPart(null);
+      const outcome = await response.json();
+      setMessage(outcome.detail || "Importer finished");
+      resetPreview();
       setInput("");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unexpected error");
@@ -174,7 +236,7 @@ function App() {
               type="radio"
               value="mouser"
               checked={supplier === "mouser"}
-              onChange={() => setSupplier("mouser")}
+              onChange={() => handleSupplierSwitch("mouser")}
             />
             Mouser
           </label>
@@ -183,7 +245,7 @@ function App() {
               type="radio"
               value="digikey"
               checked={supplier === "digikey"}
-              onChange={() => setSupplier("digikey")}
+              onChange={() => handleSupplierSwitch("digikey")}
             />
             Digi-Key
           </label>
@@ -207,13 +269,28 @@ function App() {
 
       {message && <div className="alert">{message}</div>}
 
+      {part && previewWarnings.length > 0 && (
+        <div className="alert warning">
+          {previewWarnings.map((warning) => (
+            <p key={warning}>{warning}</p>
+          ))}
+        </div>
+      )}
+
       {part && (
         <section className="card">
           <h2>Review & Edit</h2>
+          {matchedCategory && matchedCategory.length > 0 && (
+            <div className="info-banner">
+              <span>Suggested category</span>
+              <strong>{matchedCategory.join(" / ")}</strong>
+            </div>
+          )}
           <div className="form-grid">
             <label>
               Name
-              <input value={part.name} onChange={(event) => setPart({ ...part, name: event.target.value })} />
+              <input value={part.name} disabled />
+              <small>The importer uses the MPN as the InvenTree part name.</small>
             </label>
             <label>
               Description
@@ -241,13 +318,17 @@ function App() {
               />
             </label>
             <label>
-              InvenTree Category ID
+              Category Path Override
               <input
-                type="number"
-                value={part.category_id ?? ""}
-                onChange={(event) =>
-                  setPart({ ...part, category_id: event.target.value ? Number(event.target.value) : undefined })
-                }
+                value={(part.category_path ?? []).join(" / ")}
+                onChange={(event) => {
+                  const path = event.target.value
+                    .split("/")
+                    .map((item) => item.trim())
+                    .filter(Boolean);
+                  setPart({ ...part, category_path: path });
+                }}
+                placeholder="Electronics / Connectors / Headers"
               />
             </label>
           </div>
@@ -256,6 +337,11 @@ function App() {
             {part.datasheet_url && (
               <a href={part.datasheet_url} target="_blank" rel="noreferrer">
                 Datasheet
+              </a>
+            )}
+            {part.supplier_link && (
+              <a href={part.supplier_link} target="_blank" rel="noreferrer">
+                Supplier page
               </a>
             )}
             {part.image_url && <img src={part.image_url} alt="part" />}
