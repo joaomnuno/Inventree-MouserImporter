@@ -9,6 +9,7 @@
 ## Build, Test, and Development Commands
 - `docker compose up --build` — rebuilds both services and runs the stack locally.
 - `cd backend && poetry run python manage.py test` (or `pytest`) — executes Django unit tests.
+- `cd backend && python manage.py collectstatic --noinput` — rebuilds admin/DRF static assets (required after dependency updates and before Docker builds).
 - `cd frontend && npm install && npm run dev` — starts the Vite dev server; `npm run test` runs frontend unit tests.
 - `cd inventree-part-import && poetry run pytest` — validates the vendored importer logic before syncing changes.
 
@@ -31,3 +32,4 @@
 - The runtime importer config directory lives in `.importer_config/` (gitignored). The backend copies the templates from `inventree_part_import_config/` and injects provider credentials from env vars when `/api/importer/*` is called. Update the templates first, then delete `.importer_config/` locally if you need a fresh copy.
 - New Django endpoints `/api/importer/preview/` and `/api/importer/import/` wrap the vendored `inventree-part-import` library. Always surface dry-run data through `preview` and use the importer pipeline for real imports; the legacy `/api/search/*` + `/api/import/` flow should be treated as fallback only.
 - Document any new importer settings (e.g., `MOUSER_SCRAPING`, `DIGIKEY_LANGUAGE`, `IMPORTER_CONFIG_DIR`) in both `README.md` and here when you add them so the ops team knows how to configure deployments.
+- `backend/staticfiles/` is not checked in; always run `python backend/manage.py collectstatic --noinput` locally before packaging/pushing images so WhiteNoise can serve assets in every environment.

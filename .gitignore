@@ -10,3 +10,4 @@ frontend/dist/
 coverage/
 .importer_config/
 .venv/
+backend/staticfiles/
