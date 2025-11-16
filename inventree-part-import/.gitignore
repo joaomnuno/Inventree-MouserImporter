@@ -1,0 +1,14 @@
+.history/
+.vscode/
+
+__pycache__
+.venv/
+
+.envrc
+
+Pipfile
+Pipfile.lock
+
+dist/
+tests/data/
+tests/test_config/
