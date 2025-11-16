@@ -93,7 +93,10 @@ class ImporterRunner:
         if not part_number:
             raise ImporterError("Part number is required")
 
-        results = list(search(part_number, supplier_id=supplier, only_supplier=True))
+        results_iter = search(part_number, supplier_id=supplier, only_supplier=True)
+        if results_iter is None:
+            raise ImporterError(f"Supplier '{supplier}' is not configured in suppliers.yaml")
+        results = list(results_iter)
         if not results:
             raise ImporterError(f"Supplier '{supplier}' is not configured")
 

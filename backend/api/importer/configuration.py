@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 import shutil
 import threading
@@ -94,10 +95,15 @@ class ImporterConfiguration:
         factories: list[SupplierConfigFactory] = []
         for supplier in settings.IMPORTER_SUPPLIERS:
             supplier_lower = supplier.lower()
-            if supplier_lower == "mouser":
-                factories.append(SupplierConfigFactory("mouser", self._build_mouser_config))
-            elif supplier_lower == "digikey":
-                factories.append(SupplierConfigFactory("digikey", self._build_digikey_config))
+            try:
+                if supplier_lower == "mouser":
+                    factories.append(SupplierConfigFactory("mouser", self._build_mouser_config))
+                elif supplier_lower == "digikey":
+                    factories.append(SupplierConfigFactory("digikey", self._build_digikey_config))
+                else:
+                    logger.warning("Unknown importer supplier '%s' requested; skipping", supplier)
+            except ImporterConfigurationError as exc:
+                logger.warning("Skipping supplier '%s': %s", supplier_lower, exc)
         if not factories:
             raise ImporterConfigurationError("No supported suppliers configured")
         return factories
@@ -141,7 +147,7 @@ class ImporterConfiguration:
 
 def _require_env(name: str) -> str:
     value = os.environ.get(name)
-    if not value:
+    if not value or value.strip().lower() in {"changeme", "placeholder"}:
         raise ImporterConfigurationError(f"Environment variable '{name}' is required")
     return value
 
@@ -151,3 +157,4 @@ def _env_bool(name: str, default: bool) -> bool:
     if value is None:
         return default
     return value.lower() in {"1", "true", "yes", "on"}
+logger = logging.getLogger(__name__)
